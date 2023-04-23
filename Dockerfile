@@ -4,7 +4,7 @@ FROM golang:alpine AS builder
 # 修改源
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 # 安装相关环境依赖
-RUN apk update && apk add --no-cache git bash wget curl
+RUN apk update && apk add --no-cache git bash wget curl unzip 
 # 运行工作目录
 WORKDIR /go/src/v2ray.com/core
 # 克隆源码运行安装
