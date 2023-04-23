@@ -11,15 +11,10 @@ WORKDIR /go/src/v2ray.com/core
 RUN git clone --progress https://github.com/v2fly/v2ray-core.git . && \
     bash ./release/user-package.sh nosource noconf codename=$(git describe --tags) buildname=docker-fly abpathtgz=/tmp/v2ray.tgz
 
-# 构建基础镜像
-# 指定创建的基础镜像
+
 FROM alpine:latest
-# 作者描述信息
-MAINTAINER danxiaonuo
-# 语言设置
-ENV LANG zh_CN.UTF-8
-# 时区设置
-ENV TZ=Asia/Shanghai
+
+ENV TZ=Asia/Tehran
 # 修改源
 RUN sed -i 's/dl-cdn.alpinelinux.org/mirrors.aliyun.com/g' /etc/apk/repositories
 # 更新源
@@ -29,19 +24,19 @@ RUN apk add -U tzdata \
 && ln -sf /usr/share/zoneinfo/${TZ} /etc/localtime \
 && echo ${TZ} > /etc/timezone
 
-# 拷贝v2ray二进制文件至临时目录
 COPY --from=builder /tmp/v2ray.tgz /tmp
 
-# 授予文件权限
-RUN set -ex && \
-    apk --no-cache add ca-certificates && \
-    mkdir -p /usr/bin/v2ray /etc/v2ray && \
-    tar xvfz /tmp/v2ray.tgz -C /usr/bin/v2ray && \
-    rm -rf /tmp/v2ray.tgz /usr/bin/v2ray/*.sig /usr/bin/v2ray/doc /usr/bin/v2ray/*.json /usr/bin/v2ray/*.dat /usr/bin/v2ray/sys* && \
-    chmod +x /usr/bin/v2ray/v2ctl && \
-    chmod +x /usr/bin/v2ray/v2ray
+RUN wget -q -O /tmp/v2ray-linux-64.zip https://github.com/v2fly/v2ray-core/releases/download/v4.45.0/v2ray-linux-64.zip && \
+    unzip -d /usr/local/v2ray /tmp/v2ray-linux-64.zip v2ray  && \
+    wget -q -O /usr/local/v2ray/geosite.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geosite.dat && \
+    wget -q -O /usr/local/v2ray/geoip.dat https://github.com/Loyalsoldier/v2ray-rules-dat/releases/latest/download/geoip.dat && \
+    chmod a+x /usr/local/v2ray/entrypoint.sh && \
+    apk del wget unzip  && \
+    rm -rf /tmp/v2ray-linux-64.zip && \
+    rm -rf /var/cache/apk/* && \
+    rm -rf /tmp/*
 
-# 设置环境变量
+
 ENV PATH /usr/bin/v2ray:$PATH
 
 # 拷贝配置文件
